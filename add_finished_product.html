@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Add Finished Product</title>
+  <style>
+    body {
+      background: #f3f5fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .card {
+      background: #fff;
+      max-width: 540px;
+      width: 95%;
+      margin: 48px auto;
+      padding: 38px 32px 32px 32px;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(31, 41, 55, 0.15), 0 1.5px 2.5px #eaeaea;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    h2 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 28px;
+      color: #222;
+      letter-spacing: 0.03em;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 14px;
+    }
+    .row-group {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+    .row-group .form-group {
+      flex: 1 0 0;
+      margin-bottom: 0;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 2px;
+      color: #303050;
+      font-size: 0.99rem;
+      letter-spacing: 0.01em;
+    }
+    input[type="text"], input[type="number"] {
+      border: 1.5px solid #e0e2ea;
+      padding: 9px 13px;
+      border-radius: 7px;
+      font-size: 0.98rem;
+      transition: border 0.3s, box-shadow 0.3s;
+      background: #fafbff;
+    }
+    input:focus {
+      outline: none;
+      border-color: #7B61FF;
+      box-shadow: 0 2px 10px rgba(123,97,255,0.11);
+      background: #fff;
+    }
+
+    /* Accent submit button */
+    .btn-submit {
+      margin-top: 16px;
+      padding: 12px 0;
+      width: 100%;
+      background: linear-gradient(90deg, #7B61FF 30%, #7460f6 90%);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.15rem;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      box-shadow: 0 3px 14px rgba(123,97,255,0.18);
+      letter-spacing: 0.01em;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.12s;
+    }
+    .btn-submit:hover, .btn-submit:focus {
+      background: linear-gradient(90deg, #6e52e6, #7B61FF 90%);
+      box-shadow: 0 5px 22px rgba(123,97,255,0.28);
+      transform: translateY(-2px) scale(1.02);
+      outline: none;
+    }
+
+    /* Back button */
+    .btn-back {
+      margin: 24px auto 0 auto;
+      display: block;
+      padding: 12px 38px;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #1b74e4, #06b6d4 85%);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.08rem;
+      border: none;
+      text-decoration: none;
+      box-shadow: 0 1.5px 10px rgba(55,120,230,0.13);
+      text-align: center;
+      transition: background 0.22s, box-shadow 0.22s;
+    }
+    .btn-back:hover, .btn-back:focus {
+      background: linear-gradient(90deg, #1556a4, #1b74e4 90%);
+      text-decoration: underline;
+      outline: none;
+      box-shadow: 0 2px 10px rgba(26,112,221,0.22);
+    }
+
+    @media (max-width: 670px) {
+      .card {
+        padding: 24px 8px 18px 8px;
+        max-width: 98vw;
+      }
+      .row-group {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Add Finished Product</h2>
+    <form method="POST" action="{{ url_for('add_finished_product') }}" novalidate>
+
+        <div class="form-group">
+        <label for="fg_in_date">FG IN DATE</label>
+        <input type="date" id="fg_in_date" name="fg_in_date" required>
+      </div>
+
+      <div class="form-group">
+        <label for="grn_no">GRN NO</label>
+        <input type="text" id="grn_no" name="grn_no" required>
+      </div>
+
+      <div class="form-group">
+        <label for="item_code">ITEM CODE</label>
+        <select id="item_code" name="item_code" required>
+          <option value="">Select item code</option>
+          <option value="105B">105B</option>
+          <option value="105C">105C</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="item_name">ITEM NAME</label>
+        <input type="text" id="item_name" name="item_name" readonly required>
+      </div>
+
+<!--      <div class="form-group">-->
+<!--        <label for="sn_no">S/N NO</label>-->
+<!--        <input type="text" id="sn_no" name="sn_no" required>-->
+<!--      </div>-->
+
+      <div class="form-group">
+        <label for="number">NUMBER</label>
+        <input type="number" id="number" name="number" min="1" required>
+      </div>
+
+<!--      <div class="form-group">-->
+<!--        <label for="battery_sn_number">BATTERY S/N NUMBER</label>-->
+<!--        <input type="text" id="battery_sn_number" name="battery_sn_number" required>-->
+<!--      </div>-->
+
+<!--      <div class="form-group">-->
+<!--        <label for="gps_number">GPS NUMBER</label>-->
+<!--        <input type="text" id="gps_number" name="gps_number">-->
+<!--      </div>-->
+
+<!--      <div class="form-group">-->
+<!--        <label for="charger_number">CHARGER NUMBER</label>-->
+<!--        <input type="text" id="charger_number" name="charger_number">-->
+<!--      </div>-->
+
+      <div class="form-group">
+        <label for="model_number">MODEL NUMBER</label>
+        <input type="text" id="model_number" name="model_number" readonly required>
+      </div>
+
+<!--      <div class="form-group">-->
+<!--        <label for="gps_imei_no">GPS IMEI No.</label>-->
+<!--        <input type="text" id="gps_imei_no" name="gps_imei_no">-->
+<!--      </div>-->
+
+      <button type="submit" class="btn-submit">Add Finished Product</button>
+    </form>
+    <a href="{{ url_for('dashboard') }}" class="btn-back">Back to Dashboard</a>
+  </div>
+
+  <script>
+    const itemCodeSelect = document.getElementById('item_code');
+    const itemNameInput = document.getElementById('item_name');
+    const modelNumberInput = document.getElementById('model_number');
+
+    itemCodeSelect.addEventListener('change', function () {
+      const code = this.value;
+      if (code === '105B') {
+        itemNameInput.value = 'highstar';
+        modelNumberInput.value = 'ATPL/MDL/DGN/02';
+      } else if (code === '105C') {
+        itemNameInput.value = 'highpower';
+        modelNumberInput.value = 'ATPL/MDL/DGN/03';
+      } else {
+        itemNameInput.value = '';
+        modelNumberInput.value = '';
+      }
+    });
+  </script>
+</body>
+</html>

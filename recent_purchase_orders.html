@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recent Purchase Orders - Sanaka Lithium</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- DataTables CSS -->
+  <link href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f8f9fa;
+      color: #212529;
+      padding: 2rem;
+    }
+    .card {
+      border-radius: 0.5rem;
+      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.03);
+      margin-bottom: 1.5rem;
+      background-color: #fff;
+      padding: 1.5rem;
+    }
+    .section-title {
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 35px;
+      color: #5a4de4;
+      border-bottom: 4px solid #5a4de4;
+      padding-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container mt-4" role="main" aria-label="Recent Purchase Order Management">
+    <div class="card">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h2 class="section-title">Recent Purchase Orders</h2>
+        <a href="{{ url_for('add_purchase_order') }}"
+           class="btn btn-outline-primary"
+           aria-label="Add new purchase order">
+          <i class="bi bi-plus-circle"></i> New Purchase Order
+        </a>
+      </div>
+
+      <!-- SAME search + date filter + table as in add_purchase_order.html -->
+      <section id="recentPurchaseOrdersSection" aria-labelledby="recentOrdersTitle">
+        <input type="search"
+               id="poSearchInput"
+               class="form-control mb-3"
+               placeholder="Search Purchase Order or Invoice"
+               aria-label="Search Purchase Orders or Invoices" />
+
+        <input type="date"
+               id="poDateInput"
+               class="form-control mb-4"
+               aria-label="Filter purchase orders by date" />
+
+        <div class="table-responsive rounded shadow-sm">
+          <table id="recentPurchaseOrders"
+                 class="table table-striped table-hover mb-0"
+                 aria-describedby="recentOrdersTitle"
+                 style="width:100%">
+            <thead class="table-primary">
+              <tr>
+                <th>PO Number</th>
+                <th>GRN Number</th>
+                <th>Invoice Number</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for po in purchase_orders %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('purchase_order_invoice', po_id=po.id) }}"
+                     class="text-decoration-none text-primary">
+                    {{ po.purchase_order_number }}
+                  </a>
+                </td>
+                <td>{{ po.grn_number }}</td>
+                <td>
+                  <a href="{{ url_for('purchase_order_invoice', po_id=po.id) }}"
+                     class="text-decoration-none text-primary">
+                    {{ po.invoice_number }}
+                  </a>
+                </td>
+                <td>{{ po.date.strftime('%Y-%m-%d') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Scripts (same stack as current page) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      // Same DataTables settings
+      $('#recentPurchaseOrders').DataTable({
+        "order": [[3, "desc"]],
+        "paging": false,
+        "info": false,
+        "searching": false
+      });
+
+      // Same date filter logic
+      $('#poDateInput').on('change', function () {
+        const selectedDate = $(this).val();
+        $('#recentPurchaseOrders tbody tr').each(function () {
+          const dateText = $(this).find('td:eq(3)').text().trim();
+          $(this).toggle(!selectedDate || dateText === selectedDate);
+        });
+      });
+
+      // Same search API call logic
+      document.getElementById('poSearchInput').addEventListener('input', function () {
+        const query = this.value.trim();
+        const tbody = document.querySelector('#recentPurchaseOrders tbody');
+
+        if (query.length === 0) {
+          // Optional: reload original page from server to restore recent list
+          // location.reload();
+          return;
+        }
+
+        fetch(`/api/search_purchase_orders?q=${encodeURIComponent(query)}`)
+          .then(response => response.json())
+          .then(data => {
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+              const row = document.createElement('tr');
+              row.innerHTML = '<td colspan="4" class="text-center">No matching purchase orders found.</td>';
+              tbody.appendChild(row);
+              return;
+            }
+            data.forEach(po => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td><a href="/purchase_order_invoice/${po.id}" class="text-decoration-none text-primary">${po.purchase_order_number}</a></td>
+                <td>${po.grn_number}</td>
+                <td><a href="/purchase_order_invoice/${po.id}" class="text-decoration-none text-primary">${po.invoice_number}</a></td>
+                <td>${po.date}</td>
+              `;
+              tbody.appendChild(row);
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching purchase orders:', error);
+          });
+      });
+    });
+  </script>
+
+  <a href="{{ url_for('dashboard') }}"
+     class="btn btn-link mt-3"
+     aria-label="Back to dashboard">
+    &larr; Back to Dashboard
+  </a>
+</body>
+</html>

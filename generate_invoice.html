@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Generate Invoice</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f6f8;
+      padding: 2rem;
+    }
+    .page-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h2 {
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+    .card {
+      border-radius: 0.5rem;
+      box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.03);
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+    }
+    table th, table td {
+      vertical-align: middle !important;
+      white-space: nowrap;
+    }
+    .form-control[readonly] {
+      background-color: #e9ecef;
+    }
+    .add-product-btn {
+      margin-top: 16px;
+      padding: 10px 30px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: white;
+      background-color: #5a4de4;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      border: none;
+      box-shadow: 0 3px 12px rgba(90, 77, 228, 0.4);
+      transition: background-color 0.25s ease, box-shadow 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .add-product-btn:hover,
+    .add-product-btn:focus {
+      background-color: #4038b0;
+      box-shadow: 0 5px 15px rgba(64, 56, 176, 0.7);
+      outline: none;
+      color: #fff;
+    }
+    .remove-product {
+      font-size: 1.4rem;
+      color: #dc3545;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      transition: color 0.3s ease, background-color 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .remove-product:hover,
+    .remove-product:focus {
+      color: #b02a37;
+      outline: none;
+      background-color: rgba(220, 53, 69, 0.15);
+    }
+    .totals-vertical {
+      max-width: 350px;
+      margin-left: auto;
+      margin-top: 2rem;
+    }
+    .totals-vertical .mb-3 {
+      margin-bottom: 1rem;
+    }
+    /* Modal search item styling */
+    .search-result-item:hover {
+      background-color: #f1f1f1;
+    }
+    .cursor-pointer {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">Generate Invoice</h2>
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm align-self-center">Cancel</a>
+        <button form="invoiceForm" type="submit" class="btn btn-primary btn-sm">Create</button>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('generate_invoice') }}" id="invoiceForm">
+      <div class="card">
+        <!-- Customer Details -->
+        <div class="mb-3">
+          <label for="customer_name" class="form-label text-sm">Customer Name <span class="text-danger">*</span></label>
+          <input type="text" id="customer_name" name="customer_name" class="form-control form-control-sm" required />
+        </div>
+        <div class="mb-3">
+          <label for="customer_contact" class="form-label text-sm">Contact Number</label>
+          <input type="text" id="customer_contact" name="customer_contact" class="form-control form-control-sm" />
+        </div>
+        <div class="mb-3">
+          <label for="customer_gstin" class="form-label text-sm">Customer GSTIN</label>
+          <input type="text" id="customer_gstin" name="customer_gstin" class="form-control form-control-sm" />
+        </div>
+        <div class="mb-3">
+          <label for="customer_address" class="form-label text-sm">Customer Address</label>
+          <input type="text" id="customer_address" name="customer_address" class="form-control form-control-sm" />
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered table-sm text-center align-middle mb-0" id="products-table" style="min-width: 930px;">
+            <thead class="table-primary text-sm">
+              <tr>
+                <th style="width: 4%;">S.No.</th>
+                <th style="min-width: 180px;">Product</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 12%;">Rate / Unit</th>
+                <th style="width: 12%;">Tax (%)</th>
+                <th style="width: 14%;">Line Total</th>
+                <th style="width: 6%;">Remove</th>
+              </tr>
+            </thead>
+            <tbody class="text-sm" id="products-tbody">
+              {% for product in products %}
+              <tr>
+                <td></td>
+                <td>
+                  <select name="product_name" class="form-select form-select-sm product-select" required>
+                    <option value="{{ product.name }}" selected>{{ product.name }}</option>
+                  </select>
+                </td>
+                <td>
+                  <input type="number" min="0" name="quantity" class="form-control form-control-sm quantity-input" value="1" data-price="{{ product.selling_price or 0 }}" required />
+                </td>
+                <td>
+                  <input type="number" min="0" step="0.01" name="rate" class="form-control form-control-sm rate-input" value="{{ product.selling_price or 0 }}" required />
+                </td>
+                <td>
+                  <input type="number" min="0" max="100" step="0.01" name="tax_percent" class="form-control form-control-sm tax-input" value="18" required />
+                </td>
+                <td class="line-total">0.00</td>
+                <td class="text-center">
+                  <button type="button" class="remove-product" aria-label="Remove product">&times;</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Add Product button that opens the modal -->
+          <button type="button" id="openProductSearch" class="add-product-btn" aria-label="Add a product">
+            + Add Product
+          </button>
+        </div>
+
+        <!-- Totals vertical stack -->
+        <div class="totals-vertical">
+          <div class="mb-3">
+            <label class="form-label text-sm">Subtotal</label>
+            <input type="text" class="form-control form-control-sm" id="subtotal" name="subtotal" readonly value="0.00" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-sm">Total Tax</label>
+            <input type="text" class="form-control form-control-sm" id="total_tax" name="total_tax" readonly value="0.00" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-sm">Grand Total</label>
+            <input type="text" class="form-control form-control-sm" id="grand_total" name="grand_total" readonly value="0.00" />
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal for product search -->
+  <div class="modal fade" id="productSearchModal" tabindex="-1" aria-labelledby="productSearchLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="productSearchLabel">Search & Select Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="productSearchInput" class="form-control mb-3" placeholder="Search products..."/>
+          <div id="productSearchResults" style="max-height:400px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const productsTbody = document.getElementById('products-tbody');
+
+  // Updates all line totals and grand totals based on quantity, rate, and tax %
+  function updateTotals() {
+    let subtotal = 0;
+    let totalTax = 0;
+
+    const rows = productsTbody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const qtyInput = row.querySelector('input[name="quantity"]');
+      const rateInput = row.querySelector('input[name="rate"]');
+      const taxInput = row.querySelector('input[name="tax_percent"]');
+      const lineTotalElem = row.querySelector('.line-total');
+
+      const qty = parseFloat(qtyInput.value) || 0;
+      const rate = parseFloat(rateInput.value) || 0;
+      const taxPercent = parseFloat(taxInput.value) || 0;
+
+      const lineSubtotal = qty * rate;
+      const taxAmount = lineSubtotal * taxPercent / 100;
+      const lineTotal = lineSubtotal + taxAmount;
+
+      lineTotalElem.textContent = lineTotal.toFixed(2);
+
+      subtotal += lineSubtotal;
+      totalTax += taxAmount;
+    });
+
+    const grandTotal = subtotal + totalTax;
+
+    document.getElementById('subtotal').value = subtotal.toFixed(2);
+    document.getElementById('total_tax').value = totalTax.toFixed(2);
+    document.getElementById('grand_total').value = grandTotal.toFixed(2);
+  }
+
+  // Update S.No for each row
+  function updateRowNumbers() {
+    const rows = productsTbody.querySelectorAll('tr');
+    rows.forEach((row, idx) => {
+      row.children[0].textContent = idx + 1;
+    });
+  }
+
+  // Attach event listeners to inputs and remove button in a given row
+  function attachRowEvents(row) {
+    const inputs = row.querySelectorAll('input, select');
+    inputs.forEach(input => input.addEventListener('input', updateTotals));
+
+    row.querySelector('.remove-product').addEventListener('click', () => {
+      row.remove();
+      updateRowNumbers();
+      updateTotals();
+    });
+  }
+
+  // Add product as a new row in the invoice table
+  function addProductRow(product) {
+    const newRow = document.createElement('tr');
+
+    newRow.innerHTML = `
+      <td></td>
+      <td>
+        <select name="product_name" class="form-select form-select-sm product-select" required>
+          <option value="${product.name}" selected>${product.name}</option>
+        </select>
+      </td>
+      <td>
+        <input type="number" min="0" name="quantity" class="form-control form-control-sm quantity-input" value="1" required />
+      </td>
+      <td>
+        <input type="number" min="0" step="0.01" name="rate" class="form-control form-control-sm rate-input" value="${product.rate.toFixed(2)}" required />
+      </td>
+      <td>
+        <input type="number" min="0" max="100" step="0.01" name="tax_percent" class="form-control form-control-sm tax-input" value="${product.tax.toFixed(2)}" required />
+      </td>
+      <td class="line-total">0.00</td>
+      <td class="text-center">
+        <button type="button" class="remove-product" aria-label="Remove product">&times;</button>
+      </td>
+    `;
+
+    productsTbody.appendChild(newRow);
+    updateRowNumbers();
+    attachRowEvents(newRow);
+    updateTotals();
+  }
+
+  // Modal and search logic
+  const openSearchBtn = document.getElementById('openProductSearch');
+  const productSearchModal = new bootstrap.Modal(document.getElementById('productSearchModal'));
+  const searchInput = document.getElementById('productSearchInput');
+  const searchResults = document.getElementById('productSearchResults');
+
+  let allProducts = [];
+
+  openSearchBtn.addEventListener('click', () => {
+    productSearchModal.show();
+    searchInput.value = '';
+    searchResults.innerHTML = '<p>Loading products...</p>';
+
+    fetch('/fetch_all_products')
+      .then(res => res.json())
+      .then(data => {
+        allProducts = data;
+        renderSearchResults(data);
+      })
+      .catch(() => {
+        searchResults.innerHTML = '<p class="text-danger">Failed to load products.</p>';
+      });
+  });
+
+  searchInput.addEventListener('input', () => {
+    const term = searchInput.value.toLowerCase();
+    const filtered = allProducts.filter(p => p.name.toLowerCase().includes(term));
+    renderSearchResults(filtered);
+  });
+
+  function renderSearchResults(products) {
+    if (products.length === 0) {
+      searchResults.innerHTML = '<p>No products found.</p>';
+      return;
+    }
+
+    searchResults.innerHTML = '';
+    products.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'search-result-item p-2 border-bottom cursor-pointer';
+      div.textContent = `${p.type}: ${p.name} (Rate: ₹${p.rate.toFixed(2)})`;
+      div.style.userSelect = 'none';
+      div.style.cursor = 'pointer';
+
+      div.addEventListener('click', () => {
+        addProductRow(p);
+        productSearchModal.hide();
+      });
+
+      searchResults.appendChild(div);
+    });
+  }
+
+  // On page load: attach events to existing rows
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#products-tbody tr').forEach(row => {
+      attachRowEvents(row);
+    });
+    updateTotals();
+    updateRowNumbers();
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Invoice {{ invoice.invoice_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { font-size: 11px !important; margin: 0.5in; }
+            .container { max-width: none !important; }
+            .mobile-stack { display: table-cell !important; width: auto !important; }
+        }
+        @media print {
+    /* Reduce page margin for better fit */
+    @page {
+        margin: 0.3in;
+    }
+
+    /* Avoid breaking tables and important blocks inside */
+    table, .invoice-container, .content-section {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Avoid page breaks inside table rows */
+    tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Avoid page break between headers and following content */
+    .header-table, .bill-to-table, .items-table, .totals-table {
+        page-break-after: auto !important;
+    }
+
+    /* Minimize padding and margins for print */
+    body {
+        padding: 0.3in !important;
+    }
+
+    .content-section {
+        padding: 10px !important;
+    }
+}
+
+
+        * {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.4;
+        }
+
+        body {
+            background: white;
+            padding: 20px 10px;
+            color: #000;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #000;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 3px solid #000;
+        }
+
+        .header-table td {
+            padding: 15px;
+            vertical-align: top;
+        }
+
+        .logo-cell {
+            width: 25%;
+            text-align: center;
+            border-right: 2px solid #000;
+        }
+
+        .logo-cell img {
+            max-width: 150px;
+            max-height: 60px;
+            width: 100%;
+            height: auto;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .company-details {
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .invoice-details-cell {
+            width: 25%;
+            padding-left: 20px;
+            text-align: right;
+        }
+
+        .invoice-number {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .content-section {
+            padding: 25px;
+        }
+
+        .bill-to-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .bill-to-table td {
+            border: 1px solid #000;
+            padding: 12px;
+            display: table-cell;
+        }
+
+        /* Mobile responsive bill-to */
+        @media (max-width: 768px) {
+            .bill-to-table {
+                display: block;
+            }
+            .bill-to-table td {
+                display: block;
+                width: 100% !important;
+                border: 1px solid #000;
+                margin-bottom: 10px;
+                padding: 15px;
+            }
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #000;
+            margin-bottom: 25px;
+            font-size: 11px;
+        }
+
+        .items-table th, .items-table td {
+            border: 1px solid #000;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .items-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+            font-size: 9px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .items-table .desc {
+            text-align: left;
+            font-size: 10px;
+        }
+
+        /* Mobile table responsiveness */
+        @media (max-width: 768px) {
+            .items-table {
+                font-size: 10px;
+                border: 1px solid #000;
+            }
+            .items-table th, .items-table td {
+                padding: 4px 2px;
+                font-size: 9px;
+            }
+            .items-table .desc {
+                font-size: 9px;
+                white-space: normal;
+                word-break: break-word;
+            }
+            .items-table thead {
+                display: none;
+            }
+            .items-table tr {
+                display: block;
+                margin-bottom: 10px;
+                border: 1px solid #000;
+                padding: 10px;
+            }
+            .items-table td {
+                display: block;
+                text-align: left !important;
+                border: none;
+                padding: 5px 0;
+                border-bottom: 1px solid #ddd;
+            }
+            .items-table td:last-child {
+                border-bottom: none;
+                font-weight: bold;
+                background: #f9f9f9;
+            }
+            .items-table td:before {
+                content: attr(data-label) ": ";
+                font-weight: bold;
+                display: inline-block;
+                width: 40%;
+            }
+        }
+
+        /* Totals table responsive */
+        .totals-wrapper {
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .totals-table {
+            width: 50%;
+            float: right;
+            border-collapse: collapse;
+            border: 2px solid #000;
+        }
+
+        .totals-table th, .totals-table td {
+            border: 1px solid #000;
+            padding: 10px 12px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .grand-total {
+            font-size: 14px !important;
+            border-top: 3px double #000 !important;
+        }
+
+        @media (max-width: 768px) {
+            .totals-wrapper {
+                float: none;
+                width: 100%;
+            }
+            .totals-table {
+                width: 100%;
+                float: none;
+                margin: 0 auto 20px;
+            }
+        }
+
+        .amount-text {
+            margin-top: 20px;
+            font-size: 12px;
+            clear: both;
+        }
+
+        .footer-section {
+            border-top: 2px solid #000;
+            padding-top: 20px;
+            margin-top: 30px;
+        }
+
+        .footer-table td {
+            vertical-align: top;
+            padding: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .footer-table {
+                display: block;
+            }
+            .footer-table td {
+                display: block;
+                width: 100%;
+                text-align: left !important;
+                margin-bottom: 20px;
+            }
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 40px;
+            margin: 15px 0;
+        }
+
+        .no-print {
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        @media (max-width: 576px) {
+            .no-print {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .no-print .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .btn {
+            border: 1px solid #000;
+            background: white;
+            color: #000;
+            padding: 8px 16px;
+            text-decoration: none;
+            font-size: 11px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: #f5f5f5;
+        }
+
+        /* General mobile improvements */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px 5px;
+            }
+            .content-section {
+                padding: 15px;
+            }
+            .company-name {
+                font-size: 20px;
+            }
+            .header-table td {
+                padding: 10px;
+            }
+            .logo-cell {
+                width: 30%;
+            }
+            .invoice-details-cell {
+                width: 35%;
+                padding-left: 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="invoice-container">
+            <!-- Action Buttons -->
+            <div class="no-print">
+                <a href="{{ url_for('show_customer_invoices') }}" class="btn">Back</a>
+                <button onclick="window.print()" class="btn">Print</button>
+                <button onclick="downloadPDF()" class="btn">PDF</button>
+            </div>
+
+            <!-- Header Table -->
+            <table class="header-table">
+                <tr>
+                    <td class="logo-cell">
+                        <img src="/static/logo.png" alt="Sanaka Lithium Logo">
+                    </td>
+                    <td>
+                        <div class="company-name">SANAKA LITHIUM</div>
+                        <div class="company-details">
+                            Lithium Battery Manufacturing<br>
+                            GSTIN: 29ABCDE1234F1Z5<br>
+                            Phone: +91-XXXXXXXXXX<br>
+                            [Complete Address]
+                        </div>
+                    </td>
+                    <td class="invoice-details-cell">
+                        <div class="invoice-number">INVOICE</div>
+                        <div><strong>Invoice No:</strong> {{ invoice.invoice_number }}</div>
+                        <div><strong>Date:</strong> {{ invoice.created_at.strftime('%d/%m/%Y') }}</div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Content -->
+            <div class="content-section">
+                <!-- Bill To & Ship To -->
+                <table class="bill-to-table">
+                    <tr>
+                        <td style="width: 50%;">
+                            <strong>BILL TO:</strong><br><br>
+                            <strong>{{ invoice.customer_name }}</strong><br>
+                            {% if invoice.customer_address %}{{ invoice.customer_address }}<br>{% endif %}
+                            Phone: {{ invoice.customer_contact or 'N/A' }}<br>
+                            GSTIN: {{ invoice.customer_gstin or 'Cash' }}
+                        </td>
+                        <td style="width: 50%;" class="mobile-stack">
+                            <strong>SHIP TO:</strong><br><br>
+                            <strong>{{ invoice.customer_name }}</strong><br>
+                            {% if invoice.customer_address %}{{ invoice.customer_address }}<br>{% endif %}
+                            Phone: {{ invoice.customer_contact or 'N/A' }}
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Items Table -->
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">S.No.</th>
+                            <th style="width: 45%;">Description of Goods</th>
+                            <th style="width: 8%;">Qty</th>
+                            <th style="width: 12%;">Rate</th>
+                            <th style="width: 8%;">Tax%</th>
+                            <th style="width: 12%;">Tax Amt</th>
+                            <th style="width: 10%;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice.items %}
+                        <tr>
+                            <td data-label="S.No.">{{ loop.index }}</td>
+                            <td data-label="Description" class="desc">{{ item.product_name }}</td>
+                            <td data-label="Qty">{{ "%.2f"|format(item.quantity) }}</td>
+                            <td data-label="Rate" class="text-right">₹{{ "%.2f"|format(item.rate) }}</td>
+                            <td data-label="Tax%"> {{ "%.1f"|format(item.tax_rate) }}</td>
+                            <td data-label="Tax Amt" class="text-right">₹{{ "%.2f"|format(item.tax_amount) }}</td>
+                            <td data-label="Total" class="text-right fw-bold">₹{{ "%.2f"|format(item.line_total) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Totals Table -->
+                <div class="totals-wrapper">
+                    <table class="totals-table">
+                        <tr>
+                            <th>Sub Total</th>
+                            <td class="text-right">₹{{ "%.2f"|format(invoice.subtotal) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Tax</th>
+                            <td class="text-right">₹{{ "%.2f"|format(invoice.total_tax) }}</td>
+                        </tr>
+                        <tr class="grand-total">
+                            <th>GRAND TOTAL</th>
+                            <td class="text-right">₹{{ "%.2f"|format(invoice.grand_total) }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="amount-text">
+                    <strong>Rupees {{ "%.0f"|format(invoice.grand_total) }} Only</strong>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer-section">
+                <table class="footer-table" style="width: 100%;">
+                    <tr>
+                        <td style="width: 50%;">
+                            <strong>Terms & Conditions:</strong><br>
+                            1. Goods once sold will not be taken back<br>
+                            2. Payment due within 15 days<br>
+                            3. Subject to [City] Jurisdiction
+                        </td>
+                        <td style="width: 50%; text-align: right;">
+                            <strong>Authorized Signature:</strong><br>
+                            <div class="signature-line"></div>
+                            <div>For Sanaka Lithium</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

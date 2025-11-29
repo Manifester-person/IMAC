@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin User Management</title>
+</head>
+<body>
+  <h1>Manage Users</h1>
+  <table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+      <tr><th>Username</th><th>Role</th><th>Can Register</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <form method="post">
+          <td>{{ user.username }}</td>
+          <td>
+            <select name="role">
+              <option value="store_access" {% if user.role =='store_access' %}selected{% endif %}>Store Access</option>
+              <option value="admin_access" {% if user.role =='admin_access' %}selected{% endif %}>Admin Access</option>
+              <option value="manager_access" {% if user.role =='manager_access' %}selected{% endif %}>Manager Access</option>
+              <option value="super_access" {% if user.role =='super_access' %}selected{% endif %}>Super Access</option>
+            </select>
+          </td>
+          <td>
+            <input type="checkbox" name="can_register" {% if user.can_register %}checked{% endif %} />
+          </td>
+          <td>
+            <input type="hidden" name="user_id" value="{{ user.id }}" />
+            <button type="submit">Update</button>
+          </td>
+        </form>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+<script>
+    if ("Notification" in window) {
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      const evtSource = new EventSource("/registration_notifications");
+      evtSource.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        new Notification("Unauthorized Registration Attempt", {
+          body: `Username: ${data.username}\nTime: ${data.timestamp}`,
+        });
+      };
+    }
+  });
+}
+
+</script>
+</body>
+</html>

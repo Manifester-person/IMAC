@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Edit Requisition</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+</head>
+<body>
+  <div class="container mt-4">
+    <h2>Edit Requisition - {{ req.requisition_no }}</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="requisition_no" class="form-label">Requisition No</label>
+        <input type="text" class="form-control" id="requisition_no" name="requisition_no" value="{{ req.requisition_no }}" required />
+      </div>
+      <div class="mb-3">
+        <label for="order_no" class="form-label">Order No</label>
+        <input type="text" class="form-control" id="order_no" name="order_no" value="{{ req.order_no or '' }}" />
+      </div>
+      <div class="mb-3">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" class="form-control" id="date" name="date" value="{{ req.date.strftime('%Y-%m-%d') if req.date else '' }}" />
+      </div>
+      <div class="mb-3">
+        <label for="status" class="form-label">Status</label>
+        <input type="text" class="form-control" id="status" name="status" value="{{ req.status or '' }}" />
+      </div>
+      <div class="mb-3">
+        <label for="department" class="form-label">Department</label>
+        <input type="text" class="form-control" id="department" name="department" value="{{ req.department }}" required />
+      </div>
+      <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{ req.name }}" required />
+      </div>
+      <div class="mb-3">
+        <label for="designation" class="form-label">Designation</label>
+        <input type="text" class="form-control" id="designation" name="designation" value="{{ req.designation }}" required />
+      </div>
+      <div class="mb-3">
+        <label for="purpose" class="form-label">Purpose</label>
+        <input type="text" class="form-control" id="purpose" name="purpose" value="{{ req.purpose }}" required />
+      </div>
+      <div class="mb-3">
+        <label for="remark" class="form-label">Remark</label>
+        <textarea class="form-control" id="remark" name="remark">{{ req.remark or '' }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label for="issuer_remark" class="form-label">Issuer Remark</label>
+        <textarea class="form-control" id="issuer_remark" name="issuer_remark">{{ req.issuer_remark or '' }}</textarea>
+      </div>
+
+      <h4>Item Details:</h4>
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm mb-3">
+          <thead class="table-light">
+            <tr>
+              <th>S. No</th>
+              <th>Material Name/Code</th>
+              <th>Unit</th>
+              <th>In Stock (Before)</th>
+              <th>Quantity</th>
+              <th>Vendor</th>
+              <th>Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in req.items %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>
+                <input type="text" class="form-control form-control-sm" name="item_{{ item.id }}_material_name" value="{{ item.material_name }}" required />
+                <input type="hidden" name="item_{{ item.id }}_material_code" value="{{ item.material_code }}" />
+              </td>
+              <td><input type="text" class="form-control form-control-sm" name="item_{{ item.id }}_unit" value="{{ item.unit_of_measurement or '' }}" /></td>
+              <td><input type="number" class="form-control form-control-sm" name="item_{{ item.id }}_current_stock" value="{{ item.current_stock }}" readonly /></td>
+              <td><input type="number" class="form-control form-control-sm" name="item_{{ item.id }}_quantity" value="{{ item.quantity }}" required /></td>
+              <td><input type="text" class="form-control form-control-sm" name="item_{{ item.id }}_vendor" value="{{ item.vendor or '' }}" /></td>
+              <td><input type="number" step="0.01" class="form-control form-control-sm" name="item_{{ item.id }}_rate" value="{{ item.rate }}" required /></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <button type="submit" class="btn btn-success">Save Changes</button>
+      <a href="{{ url_for('requisition_history') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</body>
+</html>

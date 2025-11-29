@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Purchase Order - Sanaka Lithium</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f8f9fa;
+      color: #212529;
+      padding: 2rem;
+    }
+
+    .card {
+      border-radius: 0.5rem;
+      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.03);
+      margin-bottom: 1.5rem;
+      background-color: #fff;
+      padding: 1.5rem;
+    }
+
+    .section-title {
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 35px;
+      color: #5a4de4;
+      border-bottom: 4px solid #5a4de4;
+      padding-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+
+    table#products-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 850px;
+    }
+
+    table#products-table thead th {
+      background-color: #f1f3f5;
+      font-weight: 700;
+      color: #5a4de4;
+      vertical-align: middle;
+      padding: 16px 16px;
+      border-bottom: 2px solid #5a4de4;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    table#products-table tbody tr:hover {
+      background-color: #fafafa;
+    }
+
+    table#products-table tbody td {
+      padding: 16px 16px;
+      vertical-align: middle;
+      border-bottom: 1px solid #dee2e6;
+      text-align: center;
+    }
+
+    /* Regular inputs */
+    table#products-table input.form-control:not(.rate-input) {
+      max-width: 130px !important;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      border: 1.2px solid #ced4da;
+      text-align: center;
+      transition: border-color 0.3s ease;
+      height: 42px;
+    }
+
+    /* SPECIAL RATE INPUT - MUCH LARGER FOR MANUAL ENTRY */
+    table#products-table input.rate-input {
+      max-width: 200px !important; /* MUCH LARGER */
+      padding: 10px 16px; /* More padding */
+      font-size: 1rem; /* Larger font */
+      border-radius: 8px;
+      border: 2px solid #5a4de4; /* Distinct border */
+      text-align: center;
+      transition: all 0.3s ease;
+      height: 48px; /* Taller */
+      font-weight: 600; /* Bold for importance */
+      background-color: #fff8f0; /* Light highlight */
+    }
+
+    table#products-table input.rate-input:focus {
+      border-color: #4038b0;
+      box-shadow: 0 0 12px rgba(90, 77, 228, 0.6);
+      background-color: #fff;
+      transform: scale(1.02);
+      outline: none;
+    }
+
+    /* Select2 styling */
+    .select2-container--default .select2-selection--single {
+      height: 42px !important;
+      padding: 6px 12px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 30px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 40px !important;
+    }
+
+    button.btn-primary {
+      width: 100%;
+      max-width: 320px;
+      font-weight: 700;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      padding: 12px 0;
+      background-color: #5a4de4;
+      border: none;
+      box-shadow: 0 6px 15px rgba(90, 77, 228, 0.5);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      user-select: none;
+      margin-top: 30px;
+      align-self: center;
+      display: block;
+    }
+
+    button.btn-primary:hover,
+    button.btn-primary:focus {
+      background-color: #4038b0;
+      box-shadow: 0 8px 22px rgba(64, 56, 176, 0.75);
+      outline: none;
+    }
+
+    button.btn-primary:active {
+      background-color: #332e92;
+    }
+
+    .add-product-btn {
+      margin-top: 20px;
+      padding: 12px 36px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: white;
+      background-color: #5a4de4;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      border: none;
+      box-shadow: 0 3px 12px rgba(90, 77, 228, 0.4);
+      transition: background-color 0.25s ease, box-shadow 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .add-product-btn:hover,
+    .add-product-btn:focus {
+      background-color: #4038b0;
+      box-shadow: 0 5px 15px rgba(64, 56, 176, 0.7);
+      color: #fff;
+      outline: none;
+    }
+
+    .add-product-btn:active {
+      background-color: #332e92;
+      box-shadow: 0 2px 8px rgba(51, 46, 146, 0.9);
+    }
+
+    .remove-product {
+      font-size: 1.5rem;
+      color: #dc3545;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      transition: color 0.3s ease, background-color 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .remove-product:hover,
+    .remove-product:focus {
+      color: #b02a37;
+      outline: none;
+      background-color: rgba(220, 53, 69, 0.15);
+    }
+
+    @media (max-width: 768px) {
+      table#products-table {
+        min-width: 850px;
+        width: 100%;
+        font-size: 0.85rem;
+      }
+
+      table#products-table input.form-control:not(.rate-input) {
+        max-width: 110px !important;
+        font-size: 0.9rem;
+      }
+
+      table#products-table input.rate-input {
+        max-width: 180px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container mt-4" role="main">
+    <div class="card">
+      <section id="purchaseOrderFormContainer" aria-label="Add Purchase Order Form">
+        <h2 class="section-title">Add Purchase Order</h2>
+        <form id="purchaseOrderForm" novalidate>
+          <!-- Purchase Order Number -->
+          <div class="mb-4">
+            <label for="purchase_order_number" class="form-label fw-bold">Purchase Order Number</label>
+            <input type="text" id="purchase_order_number" name="purchase_order_number" class="form-control" required
+              placeholder="Enter Purchase Order Number" />
+          </div>
+
+          <!-- VENDOR - Manual Entry -->
+          <div class="mb-4">
+            <label for="vendor_name" class="form-label fw-bold">Vendor <span class="text-muted">(Manual Entry)</span></label>
+            <input type="text" id="vendor_name" name="vendor_name" class="form-control" required
+              placeholder="Enter Vendor Name" />
+          </div>
+
+          <!-- GRN and Date -->
+          <div class="info-row d-flex flex-wrap gap-4 mb-4 align-items-center">
+            <div class="flex-grow-1">
+              <label for="grn_number" class="form-label fw-bold">GRN Number</label>
+              <input type="text" id="grn_number" name="grn_number" class="form-control" value="GRN-2025-001" readonly />
+            </div>
+            <div class="grn-date bg-light p-3 rounded text-center text-muted" aria-label="Goods Receipt Note Date"
+              style="min-width:180px; font-weight:600; font-size: 1rem;">
+              GRN Date: 2025-11-29
+            </div>
+          </div>
+
+          <!-- Invoice Number -->
+          <div class="mb-4">
+            <label for="invoice_number" class="form-label fw-bold">Invoice Number</label>
+            <input type="text" id="invoice_number" name="invoice_number" class="form-control" required
+              placeholder="Enter Invoice Number" />
+          </div>
+
+          <!-- Products Table with LARGER RATE FIELD -->
+          <div class="table-responsive shadow-sm rounded mb-4">
+            <table class="table table-bordered table-sm text-center align-middle mb-0" id="products-table"
+              aria-label="Products Table">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 11%;">PO #</th>
+                  <th style="width: 21%;">Product</th>
+                  <th style="width: 12%;">Material Code</th>
+                  <th style="width: 10%;">Order Qty</th>
+                  <th style="width: 8%;">UOM</th>
+                  <th style="width: 10%;">Stock</th>
+                  <th style="width: 9%;">Quantity</th>
+                  <th style="width: 9%;">Remaining</th>
+                  <th style="width: 13%;">Rate 💰</th> <!-- WIDER + emoji for attention -->
+                  <th style="width: 10%;">Total</th>
+                  <th style="width: 6%;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="products-container"></tbody>
+            </table>
+          </div>
+
+          <button type="button" id="add-product-btn" class="add-product-btn" aria-label="Add a product">
+            <i class="bi bi-plus-circle"></i> Add Product
+          </button>
+
+          <button type="submit" class="btn btn-primary mt-5" aria-label="Submit Purchase Order">
+            <i class="bi bi-check-circle me-2"></i>Add Purchase Order
+          </button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <!-- jQuery, Bootstrap, Select2 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      // Sample product data for demo
+      const productDataMap = {
+        "1": {
+          material_code: "MAT-001",
+          uom: "Kg",
+          current_stock: 150,
+          rate: 25.50
+        },
+        "2": {
+          material_code: "MAT-002",
+          uom: "Pcs",
+          current_stock: 80,
+          rate: 15.75
+        },
+        "3": {
+          material_code: "MAT-003",
+          uom: "Lit",
+          current_stock: 200,
+          rate: 45.00
+        }
+      };
+
+      const productOptions = [
+        { id: "1", name: "Lithium Cell 18650" },
+        { id: "2", name: "Battery Pack 10Ah" },
+        { id: "3", name: "Electrolyte Solution" }
+      ];
+
+      const container = document.getElementById('products-container');
+
+      function calculateTotal(row) {
+        const qtyInput = row.querySelector('input[name="quantity"]');
+        const rateInput = row.querySelector('input[name="rate"]');
+        const totalInput = row.querySelector('input[name="total"]');
+
+        const qty = parseFloat(qtyInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 0;
+
+        totalInput.value = (qty * rate).toFixed(2);
+      }
+
+      function calculateRemaining(row) {
+        const totalQtyInput = row.querySelector('input[name="total_quantities"]');
+        const quantityInput = row.querySelector('input[name="quantity"]');
+        const remainingInput = row.querySelector('input[name="remaining"]');
+
+        const totalQty = parseInt(totalQtyInput.value) || 0;
+        const qty = parseInt(quantityInput.value) || 0;
+
+        const remaining = Math.max(0, totalQty - qty);
+        remainingInput.value = remaining;
+      }
+
+      function addProductRow() {
+        const tr = document.createElement('tr');
+        tr.classList.add('product-row', 'align-middle');
+
+        let optionsHTML = '<option></option>';
+        productOptions.forEach(product => {
+          optionsHTML += '<option value="${product.id}">${product.name}</option>';
+        });
+
+        tr.innerHTML = `
+          <td><input type="text" name="purchase_order" class="form-control" readonly /></td>
+          <td>
+            <select class="select2-select-material" name="material_id" style="width: 100%;" required>
+              ${optionsHTML}
+            </select>
+          </td>
+          <td><input type="text" name="material_code" class="form-control" readonly /></td>
+          <td><input type="number" name="total_quantities" class="form-control" min="0" required value="0" /></td>
+          <td><input type="text" name="uom" class="form-control" readonly /></td>
+          <td><input type="number" name="current_stock" class="form-control" readonly /></td>
+          <td><input type="number" name="quantity" class="form-control" min="1" required value="0" /></td>
+          <td><input type="text" name="remaining" class="form-control" readonly value="0" /></td>
+          <td><input type="number" name="rate" class="form-control rate-input" min="0" step="0.01" required value="0" /></td>
+          <td><input type="text" name="total" class="form-control" readonly value="0.00" /></td>
+          <td class="text-center">
+            <button type="button" class="remove-product" title="Remove product" aria-label="Remove product">
+              <i class="bi bi-trash-fill"></i>
+            </button>
+          </td>
+        `;
+
+        container.appendChild(tr);
+
+        const currentPONumber = $('#purchase_order_number').val();
+        tr.querySelector('input[name="purchase_order"]').value = currentPONumber || '';
+
+        const select = $(tr).find('.select2-select-material');
+        select.select2({
+          placeholder: 'Search product',
+          allowClear: true,
+          width: 'resolve'
+        });
+
+        select.on('change', function () {
+          const val = this.value;
+          const data = productDataMap[val] || { material_code: '', uom: '', current_stock: '', rate: 0 };
+          const row = this.closest('tr');
+          row.querySelector('input[name="material_code"]').value = data.material_code;
+          row.querySelector('input[name="uom"]').value = data.uom;
+          row.querySelector('input[name="current_stock"]').value = data.current_stock;
+          row.querySelector('input[name="rate"]').value = data.rate.toFixed(2);
+          calculateTotal(row);
+          calculateRemaining(row);
+        });
+
+        const totalQuantitiesInput = tr.querySelector('input[name="total_quantities"]');
+        const quantityInput = row.querySelector('input[name="quantity"]');
+        const rateInput = tr.querySelector('input[name="rate"]');
+
+        totalQuantitiesInput.addEventListener('input', () => {
+          calculateRemaining(tr);
+        });
+
+        quantityInput.addEventListener('input', () => {
+          calculateTotal(tr);
+          calculateRemaining(tr);
+        });
+
+        rateInput.addEventListener('input', () => {
+          calculateTotal(tr);
+        });
+
+        tr.querySelector('.remove-product').addEventListener('click', () => {
+          select.select2('destroy');
+          container.removeChild(tr);
+        });
+      }
+
+      // Update all purchase order input fields when PO number changes
+      $('#purchase_order_number').on('input', function () {
+        const poNumber = $(this).val();
+        $('#products-container').find('input[name="purchase_order"]').val(poNumber);
+      });
+
+      // Initial product row
+      addProductRow();
+
+      // Add new product rows
+      document.getElementById('add-product-btn').addEventListener('click', () => {
+        addProductRow();
+      });
+
+      // Form submission
+      $('#purchaseOrderForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        console.log('Form submitted:', Object.fromEntries(formData));
+        alert('Purchase Order form submitted! Check console for form data.');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Customer Out - Finished Products</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #343a40;
+      padding: 30px 15px;
+    }
+    .panel-box {
+      background-color: #fff;
+      max-width: 900px;
+      margin: 0 auto 40px auto;
+      padding: 40px 50px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(90, 77, 228, 0.15);
+      border: 1px solid #dee2e6;
+    }
+    h2 {
+      font-weight: 700;
+      font-size: 2rem;
+      margin-bottom: 35px;
+      color: #5a4de4;
+      border-bottom: 4px solid #5a4de4;
+      padding-bottom: 8px;
+      letter-spacing: 0.03em;
+      text-align: center;
+    }
+    label {
+      font-weight: 600;
+      color: #495057;
+    }
+    .form-control, select.form-select {
+      border-radius: 6px;
+      border: 1.5px solid #ced4da;
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 15px;
+    }
+    .table-responsive {
+      margin-top: 25px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 12px rgba(90, 77, 228, 0.1);
+      border: 1px solid #dee2e6;
+    }
+    table#customerOutProductsTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table#customerOutProductsTable thead th {
+      background-color: #f1f3f5;
+      font-weight: 700;
+      color: #5a4de4;
+      padding: 12px 10px;
+      border-bottom: 2px solid #5a4de4;
+      text-align: center;
+    }
+    table#customerOutProductsTable tbody td {
+      padding: 10px;
+      border-bottom: 1px solid #dee2e6;
+      text-align: center;
+    }
+    .btn-add-product, button[type=submit] {
+      margin-top: 20px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      padding: 10px 25px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .btn-add-product {
+      background-color: #5a4de4;
+      color: white;
+      border: none;
+      box-shadow: 0 3px 12px rgba(90, 77, 228, 0.4);
+    }
+    .btn-add-product:hover {
+      background-color: #4038b0;
+      box-shadow: 0 5px 15px rgba(64, 56, 176, 0.7);
+    }
+    button[type=submit] {
+      background-color: #28a745;
+      border: none;
+      color: white;
+      width: 100%;
+      max-width: 320px;
+      display: block;
+      margin: 30px auto 0 auto;
+      box-shadow: 0 3px 12px rgba(40, 167, 69, 0.6);
+    }
+    button[type=submit]:hover {
+      background-color: #218838;
+      box-shadow: 0 5px 18px rgba(33, 136, 56, 0.8);
+    }
+    .btn-remove-product {
+      background: transparent;
+      border: none;
+      color: #dc3545;
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: color 0.3s ease;
+    }
+    .btn-remove-product:hover {
+      color: #a71d2a;
+      background: rgba(220, 53, 69, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="panel-box" role="main" aria-label="Customer Out Finished Products Form">
+    <h2>Customer Out - Products Dispatch</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div>
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+      {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('customer_out') }}">
+      <label for="customer_name">Customer Name</label>
+      <input type="text" name="customer_name" id="customer_name" class="form-control" required />
+
+      <label for="customer_address">Customer Address</label>
+      <textarea name="customer_address" id="customer_address" rows="3" class="form-control" required></textarea>
+
+      <label for="contact_number">Contact Number</label>
+      <input type="text" name="contact_number" id="contact_number" class="form-control" required />
+
+      <div class="table-responsive">
+        <table id="customerOutProductsTable" aria-label="Products Table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Product Code</th>
+              <th>Available Stock</th>
+              <th>Quantity</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="outProductsContainer"></tbody>
+        </table>
+      </div>
+
+      <button type="button" class="btn-add-product" id="addOutProductBtn" aria-label="Add a product row">
+        + Add Product
+      </button>
+
+      <button type="submit" aria-label="Submit Customer Out Form">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    // Products data passed from backend to template
+    const finishedProducts = [
+      {% for product in finished_products %}
+      {
+        id: "{{ product.id }}",
+        name: "{{ product.name }}",
+        product_code: "{{ product.product_code }}",
+        stock: {{ product.current_stock }}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    const container = document.getElementById('outProductsContainer');
+
+    function addOutProductRow() {
+      const tr = document.createElement('tr');
+
+      let options = '<option value="">Select product</option>';
+      finishedProducts.forEach(p => {
+        options += `<option value="${p.id}" data-stock="${p.stock}" data-code="${p.product_code}">${p.name}</option>`;
+      });
+
+      tr.innerHTML = `
+        <td>
+          <select name="product_id" class="form-select" required>
+            ${options}
+          </select>
+        </td>
+        <td>
+          <input type="text" name="product_code" class="form-control" readonly value="">
+        </td>
+        <td>
+          <input type="number" name="available_stock" class="form-control" readonly value="">
+        </td>
+        <td>
+          <input type="number" name="quantity" class="form-control" min="1" required value="1" />
+        </td>
+        <td>
+          <button type="button" class="btn-remove-product" aria-label="Remove product row">&times;</button>
+        </td>
+      `;
+
+      container.appendChild(tr);
+
+      const select = tr.querySelector('select[name="product_id"]');
+      const codeInput = tr.querySelector('input[name="product_code"]');
+      const stockInput = tr.querySelector('input[name="available_stock"]');
+      const quantityInput = tr.querySelector('input[name="quantity"]');
+      const removeBtn = tr.querySelector('.btn-remove-product');
+
+      select.addEventListener('change', () => {
+        const selectedIndex = select.selectedIndex;
+        if(selectedIndex > 0) {
+          const option = select.options[selectedIndex];
+          const stock = option.getAttribute('data-stock');
+          const code = option.getAttribute('data-code');
+          codeInput.value = code;
+          stockInput.value = stock;
+          quantityInput.max = stock;
+          if(quantityInput.value > stock) quantityInput.value = stock;
+        } else {
+          codeInput.value = '';
+          stockInput.value = '';
+          quantityInput.value = '1';
+          quantityInput.removeAttribute('max');
+        }
+      });
+
+      removeBtn.addEventListener('click', () => {
+        container.removeChild(tr);
+      });
+    }
+
+    document.getElementById('addOutProductBtn').addEventListener('click', () => {
+      addOutProductRow();
+    });
+
+    // Add initial product row on page load
+    addOutProductRow();
+  </script>
+</body>
+</html>

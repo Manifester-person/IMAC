@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Requisition History</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <style>
+    .card { margin-bottom: 2.5rem; }
+    .table th, .table td { vertical-align: middle !important; }
+    .section-title { font-size: 1.3rem; color: #5a4de4; font-weight:600; margin-bottom:12px;}
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h2 class="section-title">All Material / Tools Requisitions</h2>
+    <a href="{{ url_for('add_requisition') }}" class="btn btn-primary mb-3">+ Add New Requisition</a>
+    <!-- Search Filters -->
+    <form class="row g-2 mb-4" id="filter-form" onsubmit="return false;">
+      <div class="col-md-3">
+        <input type="text" class="form-control form-control-sm" id="filter-requisition-no" placeholder="Requisition No.">
+      </div>
+      <div class="col-md-3">
+        <input type="text" class="form-control form-control-sm" id="filter-department" placeholder="Department">
+      </div>
+      <div class="col-md-3">
+        <input type="date" class="form-control form-control-sm" id="filter-date" placeholder="Date">
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-primary btn-sm" onclick="applyFilters()">Search</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Reset</button>
+      </div>
+    </form>
+    {% for req in requisitions %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="row mb-2">
+          <div class="col-md-3"><b>Requisition No:</b> {{ req.requisition_no }}</div>
+          <div class="col-md-3"><b>Order No:</b> {{ req.order_no or '-' }}</div>
+          <div class="col-md-3"><b>Date:</b> {{ req.date.strftime('%Y-%m-%d') if req.date else '' }}</div>
+          <div class="col-md-3"><b>Status:</b> {{ req.status or '' }}</div>
+        </div>
+        <div class="row mb-2">
+  <div class="col-md-12 text-end">
+    <a href="{{ url_for('edit_requisition', requisition_id=req.id) }}" class="btn btn-warning btn-sm">Modify</a>
+  </div>
+</div>requisition_history.html
+        <div class="row mb-2">
+          <div class="col-md-2"><b>Department:</b> {{ req.department }}</div>
+          <div class="col-md-2"><b>Name:</b> {{ req.name }}</div>
+          <div class="col-md-2"><b>Designation:</b> {{ req.designation }}</div>
+          <div class="col-md-2"><b>Purpose:</b> {{ req.purpose }}</div>
+          <div class="col-md-4"><b>Remark:</b> {{ req.remark or '' }}</div>
+        </div>
+        <div class="mb-2"><b>Issuer Remark:</b> {{ req.issuer_remark or '' }}</div>
+        <div>
+          <b>Item Details:</b>
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm mb-0 mt-2">
+              <thead class="table-light">
+                <tr>
+                  <th>S. No</th>
+                  <th>Material Name/Code</th>
+                  <th>Unit</th>
+                  <th>In Stock (Before)</th>
+                  <th>Quantity</th>
+                  <th>Vendor</th>
+                  <th>Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in req.items %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ item.material_name }} ({{ item.material_code }})</td>
+                  <td>{{ item.unit_of_measurement or '' }}</td>
+                  <td>{{ item.current_stock }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.vendor or '' }}</td>
+                  <td>{{ item.rate }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+      <div>No requisitions found.</div>
+    {% endfor %}
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+  </div>
+  <script>
+  function applyFilters() {
+    // Get filter values
+    const requisition_no = document.getElementById('filter-requisition-no').value.trim();
+    const department = document.getElementById('filter-department').value.trim();
+    const date = document.getElementById('filter-date').value.trim();
+
+    const params = new URLSearchParams();
+
+    if (requisition_no) params.append('requisition_no', requisition_no);
+    if (department) params.append('department', department);
+    if (date) params.append('date', date);
+    // Redirect with query params
+    window.location.href = "{{ url_for('requisition_history') }}?" + params.toString();
+  }
+
+  function clearFilters() {
+    document.getElementById('filter-requisition-no').value = '';
+    document.getElementById('filter-department').value = '';
+    document.getElementById('filter-date').value = '';
+    window.location.href = "{{ url_for('requisition_history') }}";
+  }
+  </script>
+</body>
+</html>

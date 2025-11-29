@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Purchase Order Invoice - {{ po.purchase_order_number }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      padding: 2rem;
+    }
+    .invoice-box {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .invoice-header {
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 1rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .invoice-header h1 {
+      font-weight: 700;
+      color: #007bff;
+    }
+    .invoice-details {
+      font-size: 1rem;
+    }
+    .invoice-details p {
+      margin-bottom: 0.2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.8rem;
+    }
+    thead {
+      background-color: #007bff;
+      color: white;
+    }
+    thead th {
+      padding: 0.8rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #dee2e6;
+    }
+    tbody td {
+      padding: 0.8rem 1rem;
+      border: 1px solid #dee2e6;
+      vertical-align: middle;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f2f7ff;
+    }
+    tfoot td {
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: none;
+      padding-top: 1rem;
+      text-align: right;
+    }
+    .total-row td {
+      border-top: 2px solid #007bff;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+    .back-link:hover {
+      color: #0056b3;
+      text-decoration: underline;
+    }
+    @media print {
+      button[aria-label="Print Invoice"] {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-box" role="main" aria-labelledby="invoiceTitle" tabindex="0">
+    <header class="invoice-header">
+      <h1 id="invoiceTitle">Purchase Order Invoice</h1>
+      <div>
+       <img src="/static/logo.png" alt="Sanaka Lithium" style="height: 50px; width: auto;">
+      </div>
+    </header>
+
+    <section class="invoice-details" aria-label="Purchase order information">
+      <p><strong>Purchase Order Number:</strong> {{ po.purchase_order_number }}</p>
+      <p><strong>Invoice Number:</strong> {{ po.invoice_number }}</p>
+      <p><strong>GRN Number:</strong> {{ po.grn_number }}</p>
+      <p><strong>Date:</strong> {{ po.date.strftime('%Y-%m-%d') }}</p>
+    </section>
+
+    <div class="table-responsive" aria-label="Purchase Order Items Table Container">
+      <table aria-label="Purchase Order Items" class="table">
+        <thead>
+          <tr>
+            <th scope="col">Material Name</th>
+            <th scope="col">Material Code</th>
+            <th scope="col">Rate</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+          <tr>
+            <td>{{ item.material.material_name }}</td>
+            <td>{{ item.material.material_code }}</td>
+            <td>{{ '{:,.2f}'.format(item.rate) }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ '{:,.2f}'.format(item.total) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="4" aria-label="Grand Total">Grand Total</td>
+            <td>{{ '{:,.2f}'.format(grand_total) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+      <button onclick="window.print()" class="btn btn-primary" aria-label="Print Invoice">
+        <i class="bi bi-printer"></i> Print
+      </button>
+    </div>
+
+    <a href="{{ url_for('add_purchase_order') }}" class="back-link" aria-label="Back to add_purchase_order">&#8592; Back </a>
+  </div>
+</body>
+</html>

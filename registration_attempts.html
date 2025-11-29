@@ -1,0 +1,16 @@
+<h1>Unauthorized Registration Attempts</h1>
+<table border="1" cellpadding="5" cellspacing="0">
+  <thead>
+    <tr><th>Username</th><th>Email</th><th>IP</th><th>Timestamp</th></tr>
+  </thead>
+  <tbody>
+    {% for a in attempts %}
+    <tr>
+      <td>{{ a.username }}</td>
+      <td>{{ a.email }}</td>
+      <td>{{ a.ip_address }}</td>
+      <td>{{ a.timestamp }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

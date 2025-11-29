@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Customer Invoice</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Your existing styles */
+        body { font-family: 'Poppins', sans-serif; background-color: #f5f6f8; padding: 2rem; }
+        .page-wrapper { max-width: 1200px; margin: 0 auto; }
+        .add-product-btn { background-color: #5a4de4; color: white; padding: 10px 30px; border-radius: 8px; }
+        .search-result-item:hover { background-color: #f1f1f1; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="d-flex justify-content-between mb-3">
+            <h2>Customer Invoice</h2>
+            <div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">Cancel</a>
+                <button form="invoiceForm" type="submit" class="btn btn-primary btn-sm">Save Invoice</button>
+            </div>
+        </div>
+
+        <form method="POST" id="invoiceForm">
+            <div class="card p-4 mb-4">
+                <!-- Customer Details -->
+                <h5>Customer Details</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Customer Name *</label>
+                        <input type="text" name="customer_name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Contact Number</label>
+                        <input type="text" name="customer_contact" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>GSTIN</label>
+                        <input type="text" name="customer_gstin" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Address</label>
+                        <input type="text" name="customer_address" class="form-control">
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <h5>Products</h5>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>S.No.</th>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Rate</th>
+                                <th>Tax(%)</th>
+                                <th>Line Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-tbody"></tbody>
+                    </table>
+                    <button type="button" id="addProductBtn" class="add-product-btn">+ Add Product</button>
+                </div>
+
+                <!-- Totals -->
+                <div class="row">
+                    <div class="col-md-8"></div>
+                    <div class="col-md-4">
+                        <div class="card p-3">
+                            <div class="d-flex justify-content-between"><strong>Subtotal:</strong> <span id="subtotal">0.00</span></div>
+                            <div class="d-flex justify-content-between"><strong>Total Tax:</strong> <span id="totalTax">0.00</span></div>
+                            <hr>
+                            <div class="d-flex justify-content-between"><strong>Grand Total:</strong> <span id="grandTotal">0.00</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Product Search Modal -->
+    <div class="modal fade" id="productModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>Search Products</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search products...">
+                    <div id="productResults" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let allProducts = [];
+        const tbody = document.getElementById('products-tbody');
+        const modal = new bootstrap.Modal(document.getElementById('productModal'));
+
+        // Load products and open modal
+        document.getElementById('addProductBtn').addEventListener('click', () => {
+            fetch('/fetch_customer_products')
+                .then(res => res.json())
+                .then(data => {
+                    allProducts = data;
+                    renderProducts(data);
+                    modal.show();
+                });
+        });
+
+        // Search products
+        document.getElementById('productSearch').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(term));
+            renderProducts(filtered);
+        });
+
+        function renderProducts(products) {
+            const results = document.getElementById('productResults');
+            results.innerHTML = products.map(p =>
+                `<div class="p-3 border-bottom search-result-item" onclick="addProduct('${p.id}', '${p.name}', ${p.rate}, ${p.tax})">
+                    ${p.type}: ${p.name} | Rate: ₹${p.rate.toFixed(2)}
+                </div>`
+            ).join('');
+        }
+
+        function addProduct(id, name, rate, tax) {
+            const row = document.createElement('tr');
+            const rowNum = tbody.children.length + 1;
+
+            row.innerHTML = `
+                <td>${rowNum}</td>
+                <td><input type="hidden" name="product_name" value="${id}">${name}</td>
+                <td><input type="number" name="quantity" class="form-control quantity" value="1" min="0"></td>
+                <td><input type="number" name="rate" class="form-control rate" value="${rate.toFixed(2)}" step="0.01" min="0"></td>
+                <td><input type="number" name="tax_percent" class="form-control tax" value="${tax.toFixed(2)}" max="100" step="0.01"></td>
+                <td class="line-total">0.00</td>
+                <td><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">×</button></td>
+            `;
+
+            tbody.appendChild(row);
+            attachEvents(row);
+            updateTotals();
+            modal.hide();
+        }
+
+        function removeRow(btn) {
+            btn.closest('tr').remove();
+            updateRowNumbers();
+            updateTotals();
+        }
+
+        function attachEvents(row) {
+            row.querySelectorAll('.quantity, .rate, .tax').forEach(input => {
+                input.addEventListener('input', updateTotals);
+            });
+        }
+
+        function updateRowNumbers() {
+            Array.from(tbody.children).forEach((row, i) => {
+                row.cells[0].textContent = i + 1;
+            });
+        }
+
+        function updateTotals() {
+            let subtotal = 0, totalTax = 0;
+
+            Array.from(tbody.children).forEach(row => {
+                const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+                const rate = parseFloat(row.querySelector('.rate').value) || 0;
+                const tax = parseFloat(row.querySelector('.tax').value) || 0;
+
+                const lineSubtotal = qty * rate;
+                const lineTax = lineSubtotal * tax / 100;
+                const lineTotal = lineSubtotal + lineTax;
+
+                row.querySelector('.line-total').textContent = lineTotal.toFixed(2);
+                subtotal += lineSubtotal;
+                totalTax += lineTax;
+            });
+
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('totalTax').textContent = totalTax.toFixed(2);
+            document.getElementById('grandTotal').textContent = (subtotal + totalTax).toFixed(2);
+        }
+    </script>
+</body>
+</html>

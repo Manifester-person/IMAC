@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Modify Finished Product {{ product.item_code }}</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .container {
+    background-color: #fff;
+    padding: 30px 40px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    width: 440px;
+    max-width: 96vw;
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+  }
+  form label {
+    display: block;
+    margin: 12px 0 6px 0;
+    font-weight: 600;
+    color: #555;
+  }
+  form input[type="text"],
+  form input[type="number"],
+  form input[type="date"],
+  form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.8px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  form input:focus,
+  form select:focus {
+    border-color: #3f51b5;
+    outline: none;
+  }
+  .button-group {
+    margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+  }
+  button[type="submit"] {
+    background-color: #3f51b5;
+    color: white;
+    font-weight: 700;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    flex-grow: 1;
+    margin-right: 15px;
+    transition: background-color 0.3s ease;
+  }
+  button[type="submit"]:hover {
+    background-color: #303f9f;
+  }
+  .cancel-link {
+    flex-grow: 1;
+    text-align: center;
+    line-height: 38px;
+    font-weight: 600;
+    color: #6c757d;
+    text-decoration: none;
+    padding: 12px 20px;
+    border: 1.8px solid #ccc;
+    border-radius: 8px;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  .cancel-link:hover {
+    border-color: #3f51b5;
+    color: #3f51b5;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h2>Modify Finished Product - {{ product.item_code }}</h2>
+    <form method="POST">
+      <label for="fg_in_date">FG In Date</label>
+      <input type="date" id="fg_in_date" name="fg_in_date" value="{{ product.fg_in_date.strftime('%Y-%m-%d') if product.fg_in_date else '' }}" required />
+
+      <label for="grn_no">GRN No</label>
+      <input type="text" id="grn_no" name="grn_no" value="{{ product.grn_no }}" required />
+
+      <label for="item_code">Item Code</label>
+      <select id="item_code" name="item_code" required>
+        <option value="">Select item code</option>
+        <option value="105B" {% if product.item_code == '105B' %}selected{% endif %}>105B</option>
+        <option value="105C" {% if product.item_code == '105C' %}selected{% endif %}>105C</option>
+      </select>
+
+      <label for="item_name">Item Name</label>
+      <input type="text" id="item_name" name="item_name" value="{{ product.item_name }}" required readonly />
+
+      {# Uncomment if needed #}
+      {# <label for="sn_no">S/N No</label>
+      <input type="text" id="sn_no" name="sn_no" value="{{ product.sn_no }}" required /> #}
+
+      <label for="number">Number</label>
+      <input type="number" id="number" name="number" value="{{ product.number }}" min="0" required />
+
+      {# Uncomment if needed #}
+      {# <label for="battery_sn_number">Battery S/N Number</label>
+      <input type="text" id="battery_sn_number" name="battery_sn_number" value="{{ product.battery_sn_number }}" required /> #}
+
+      {# <label for="gps_number">GPS Number</label>
+      <input type="text" id="gps_number" name="gps_number" value="{{ product.gps_number or '' }}" /> #}
+
+      {# <label for="charger_number">Charger Number</label>
+      <input type="text" id="charger_number" name="charger_number" value="{{ product.charger_number or '' }}" /> #}
+
+      <label for="model_number">Model Number</label>
+      <input type="text" id="model_number" name="model_number" value="{{ product.model_number }}" required readonly />
+
+      {# <label for="gps_imei_no">GPS IMEI No.</label>
+      <input type="text" id="gps_imei_no" name="gps_imei_no" value="{{ product.gps_imei_no or '' }}" /> #}
+
+      <div class="button-group">
+        <button type="submit">Modify</button>
+        <a href="{{ url_for('show_finished_goods') }}" class="cancel-link">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const itemCodeSelect = document.getElementById('item_code');
+    const itemNameInput = document.getElementById('item_name');
+    const modelNumberInput = document.getElementById('model_number');
+
+    const itemMap = {
+      '105B': {name: 'highstar', model: 'ATPL/MDL/DGN/02'},
+      '105C': {name: 'highpower', model: 'ATPL/MDL/DGN/03'}
+    };
+
+    function updateFields() {
+      const code = itemCodeSelect.value;
+      if (code && itemMap[code]) {
+        itemNameInput.value = itemMap[code].name;
+        modelNumberInput.value = itemMap[code].model;
+      } else {
+        itemNameInput.value = '';
+        modelNumberInput.value = '';
+      }
+    }
+
+    itemCodeSelect.addEventListener('change', updateFields);
+
+    updateFields();
+  </script>
+</body>
+</html>

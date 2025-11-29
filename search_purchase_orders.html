@@ -1,0 +1,31 @@
+<!-- templates/search_purchase_orders.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Search Purchase Orders - Sanaka Lithium</title>
+  <!-- Include your CSS and scripts similar to dashboard -->
+</head>
+<body>
+  <h1>Search Results for "{{ query }}"</h1>
+  <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+
+  {% if purchase_orders %}
+  <table>
+    <thead>
+      <tr><th>PO Number</th><th>Invoice Number</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+      {% for po in purchase_orders %}
+      <tr>
+        <td><a href="{{ url_for('purchase_order_invoice', po_id=po.id) }}">{{ po.purchase_order_number }}</a></td>
+        <td>{{ po.invoice_number }}</td>
+        <td>{{ po.date.strftime('%Y-%m-%d') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No purchase orders match your search.</p>
+  {% endif %}
+</body>
+</html>
